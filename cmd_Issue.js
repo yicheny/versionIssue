@@ -13,7 +13,7 @@ main();
 async function main() {
     await getInfos();
     await pullSvn();
-    mkVerison();
+    await mkVerison();
     await commitSvn();
     process.exit();
 }
@@ -33,7 +33,6 @@ async function getInfos(){
     console.log('版本号：'+ INFOS.version);
     const checkFlag = await question('请问信息是否确认无误？(Y/N)');
     return checkInfo(checkFlag);
-    // process.exit();
 }
 //拉取pullSvn最新版本至本地
 function pullSvn() {
@@ -54,19 +53,24 @@ function pullSvn() {
         return projectMap[key]
     }
 }
-
 //使用获取的版本号为拉取的文件夹重命名
 function mkVerison(){
     console.log('使用获取的版本号为拉取的文件夹重命名...');
     const {project,version} = INFOS;
-    fs.rename(getProjectName(project),version,async(err)=>{
-        if(err){
-            console.log('创建本地发布版本失败：' + err)
-        }
+    return new Promise((resolve,reject)=>{
+        fs.rename(getProjectName(project),version,(err)=>{
+            if(err){
+                reject(err)
+            }
+            resolve()
+        })
+    }).then(async()=>{
         console.log('创建本地发布版本成功');
         const url = __dirname + `\\${version}\\.svn`;
-        await exec_order('rimraf ' + url);
+        await exec_order('echo Y|rd /S '+ url);
         console.log('删除.svn文件');
+    }).catch(err=>{
+        return console.log('创建本地发布版本失败：' + err)
     });
 
     function getProjectName(key) {
@@ -81,14 +85,26 @@ function checkInfo(flag) {
     console.log('请重新输入信息');
     return getInfos();
 }
-function exec_order(order) {
-    return new Promise(resolve => exec(order,(res)=>resolve(res)));
-}
 async function commitSvn() {
     console.log('添加文件中...');
-    await exec_order(`svn add ${INFOS.version}`);
+    await exec_order(`svn add ${INFOS.version}/`);
     console.log('提交文件中...');
     await exec_order(`svn commit -m "提交描述"`);
+}
+function exec_order(order) {
+    return new Promise((resolve,reject)=>{
+        exec(order, (err, stdout, stderr) => {
+            if(err) {
+                reject(err)
+            }
+            resolve(stdout,stderr)
+        });
+    }).then((stdout,stderr)=>{
+        console.log('stdout',stdout);
+        console.log('stderr',stderr);
+    }).catch(err=>{
+        console.log('err',err)
+    });
 }
 
 //node cmd_Issue
