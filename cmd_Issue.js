@@ -7,6 +7,7 @@ const INFOS = {
     project:null,
     version:null
 };
+const rl = rlFor();
 
 main();
 
@@ -18,7 +19,7 @@ async function main() {
     process.exit();
 }
 function question (query) {
-    return new Promise(resolve => rlFor().question(query, (answer) => resolve(answer)));
+    return new Promise(resolve => rl.question(query, (answer) => resolve(answer)));
 }
 function rlFor(){
     return readline.createInterface({

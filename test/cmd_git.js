@@ -9,6 +9,7 @@ const INFOS = {
     // project:'TA',
     // version:'hello'
 };
+const rl = rlFor();
 
 main();
 
@@ -19,8 +20,9 @@ async function main() {
     await commitSvn();
     process.exit();
 }
+
 function question (query) {
-    return new Promise(resolve => rlFor().question(query, (answer) => resolve(answer)));
+    return new Promise(resolve => rl.question(query, (answer) => resolve(answer)));
 }
 function rlFor(){
     return readline.createInterface({
