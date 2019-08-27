@@ -85,8 +85,8 @@ function checkInfo(flag) {
 
 async function commitSvn() {
     console.log('添加文件中...');
-    // await exec_order(`git add ${INFOS.version}`);
-    await exec_order(`git add .`);
+    await exec_order(`git add ${INFOS.version}/`);
+    // await exec_order(`git add .`);
     console.log('提交文件中...');
     await exec_order(`git commit -m "提交描述3"`);
 }
