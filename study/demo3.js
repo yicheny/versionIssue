@@ -4,10 +4,10 @@ const {exec} = require('child_process');
 main();
 
 async function main() {
-    const gitUrl = 'https://github.com/yicheny/webStrategy.git';
-    await exec_order(`git clone ${gitUrl}`);
-    // await exec_order('npm config ls');
-    // await exec_order('yarn help');
+    // const gitUrl = 'https://github.com/yicheny/webStrategy.git';
+    // await exec_order(`git clone ${gitUrl}`);
+    await exec_order('npm config ls');
+    await exec_order('yarn help');
     console.log(1222)
 }
 

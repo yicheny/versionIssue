@@ -24,10 +24,6 @@ exec_order('rimraf ' + url);
 //修改文件名称
 // fs.rename('new','reNew',()=>{});
 
-
-// fs.deleteDir();
-
-
 function exec_order(order) {
     return new Promise(resolve => exec(order,(res)=>resolve(res)));
 }
