@@ -88,7 +88,7 @@ async function commitSvn() {
     // await exec_order(`git add ${INFOS.version}`);
     await exec_order(`git add .`);
     console.log('提交文件中...');
-    await exec_order(`git commit -m "提交描述2"`);
+    await exec_order(`git commit -m "提交描述3"`);
 }
 
 function exec_order(order) {
