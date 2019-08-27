@@ -14,8 +14,8 @@ main();
 
 async function main() {
     // await getInfos();
-    // await pullSvn();
-    // await mkVerison();
+    await pullSvn();
+    await mkVerison();
     await commitSvn();
     process.exit();
 }
@@ -60,14 +60,31 @@ function pullSvn() {
 function mkVerison(){
     console.log('使用获取的版本号为拉取的文件夹重命名...');
     const {project,version} = INFOS;
-    fs.rename(getProjectName(project),version,async(err)=>{
-        if(err){
-            console.log('创建本地发布版本失败：' + err)
-        }
+    // fs.rename(getProjectName(project),version,async(err)=>{
+    //     if(err){
+    //         return console.log('创建本地发布版本失败：' + err)
+    //     }
+    //     console.log('创建本地发布版本成功');
+    //     // const url = __dirname + `\\${version}\\.git`;
+    //     // await exec_order('rimraf ' + url);
+    //     await exec_order('echo DelectGit');
+    //     console.log('删除.git文件');
+    // });
+
+    return new Promise((resolve,reject)=>{
+        fs.rename(getProjectName(project),version,(err)=>{
+            if(err){
+                reject(err)
+            }
+            resolve()
+        })
+    }).then(async()=>{
         console.log('创建本地发布版本成功');
-        const url = __dirname + `\\${version}\\.git`;
-        await exec_order('rimraf ' + url);
+        const url = (__dirname + `\\${INFOS.version}\\.git`);
+        await exec_order('echo Y|rd /S '+ url);
         console.log('删除.git文件');
+    }).catch(err=>{
+        return console.log('创建本地发布版本失败：' + err)
     });
 
     function getProjectName(key) {
@@ -85,10 +102,12 @@ function checkInfo(flag) {
 
 async function commitSvn() {
     console.log('添加文件中...');
+    // await exec_order('echo gitAdd');
     await exec_order(`git add ${INFOS.version}/`);
     // await exec_order(`git add .`);
     console.log('提交文件中...');
-    await exec_order(`git commit -m "提交描述3"`);
+    // await exec_order('echo gitCommit');
+    await exec_order(`git commit -m "提交描述6"`);
 }
 
 function exec_order(order) {
