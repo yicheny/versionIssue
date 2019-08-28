@@ -43,7 +43,7 @@ async function getInfos(){
 //拉取pullSvn最新版本至本地
 function pullSvn() {
     if (!projectFor(INFOS.project)) {
-        console.log('该项目不存在,请重新输入');
+        console.log('没有这个项目或项目名称有误，请重新输入信息...');
         return getInfos();
     }
     return projectFor(INFOS.project)();

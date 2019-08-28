@@ -1,6 +1,7 @@
 let readline = require('readline');
 let fs = require('fs');
 const {exec} = require('child_process');
+const archiver = require('archiver');
 
 //发布需要使用的信息
 const INFOS = {
@@ -16,6 +17,7 @@ async function main() {
     await pullSvn();
     await mkVerison();
     await commitSvn();
+    await buildDir();
     process.exit();
 }
 function question (query) {
@@ -38,20 +40,21 @@ async function getInfos(){
 //拉取pullSvn最新版本至本地
 function pullSvn() {
     if (!projectFor(INFOS.project)) {
-        console.log('该项目不存在,请重新输入');
+        console.log('没有这个项目或项目名称有误，请重新输入信息...');
         return getInfos();
     }
     return projectFor(INFOS.project)();
 
     function projectFor(key) {
         const projectMap = {
-            TA:async ()=>{
-                const svnUrl = `https://192.168.1.121:8443/svn/buy_side_web/apps/bs_transfer_agent/ta_frontend`;
-                await exec_order(`svn export ${svnUrl}`)
-            }
+            TA:async ()=> await svnExport(`https://192.168.1.121:8443/svn/buy_side_web/apps/bs_transfer_agent/ta_frontend`)
         };
 
-        return projectMap[key]
+        return projectMap[key];
+
+        async function svnExport(url) {
+            await exec_order(`svn export ${url}`,'拉取最新代码中...')
+        }
     }
 }
 //使用获取的版本号为拉取的文件夹重命名
@@ -83,30 +86,43 @@ function checkInfo(flag) {
     console.log('请重新输入信息');
     return getInfos();
 }
-async function commitSvn() {
-    console.log('添加文件中...');
-    await exec_order(`svn add ${INFOS.version}/`);
-    console.log('提交文件中...');
-    await exec_order(`svn commit -m "脚本测试"`);
-    // console.log('下载依赖中...');
-    // await exec_order(`yarn`);
-    // console.log('build打包中...');
-    // await exec_order(`yarn build`);
+async function buildDir() {
+    process.chdir(`./${INFOS.version}`);
+    await exec_order(`yarn install`,'下载依赖中...');
+    await exec_order(`yarn build`,'build打包中...');
+    await zip();
+
+    async function zip() {
+        const output = fs.createWriteStream(`${__dirname}/${INFOS.version}/build.zip`);
+        const archive = archiver('zip',{zlib:{level:9}});
+        archive.pipe(output);
+        const url = `${__dirname}/${INFOS.version}/build/`;
+        archive.directory(url,'build');
+        console.log('build包压缩中...');
+        await archive.finalize()
+    }
 }
-function exec_order(order) {
+async function commitSvn() {
+    await exec_order(`svn add ${INFOS.version}/`,'添加文件中...');
+    await exec_order(`svn commit -m "脚本测试"`,'提交文件中...');
+}
+function exec_order(order,info) {
+    let i = 1;
+    const timeId = setInterval(()=>{
+        console.log(info,i++);
+    },1000);
+
     return new Promise((resolve,reject)=>{
         exec(order, (err, stdout, stderr) => {
-            if(err) {
-                reject(err)
-            }
-            resolve(stdout,stderr)
+            if(err) return reject(err);
+            return resolve(stdout,stderr);
         });
     }).then((stdout,stderr)=>{
         console.log('stdout',stdout);
         console.log('stderr',stderr);
+        clearInterval(timeId);
     }).catch(err=>{
-        console.log('err',err)
+        console.log('err',err);
+        clearInterval(timeId);
     });
 }
-
-//node cmd_Issue
