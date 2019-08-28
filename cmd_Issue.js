@@ -47,7 +47,7 @@ function pullSvn() {
         const projectMap = {
             TA:async ()=>{
                 const svnUrl = `https://192.168.1.121:8443/svn/buy_side_web/apps/bs_transfer_agent/ta_frontend`;
-                await exec_order(`svn checkout ${svnUrl}`)
+                await exec_order(`svn export ${svnUrl}`)
             }
         };
 
@@ -67,9 +67,6 @@ function mkVerison(){
         })
     }).then(async()=>{
         console.log('创建本地发布版本成功');
-        const url = __dirname + `\\${version}\\.svn`;
-        await exec_order('echo Y|rd /S '+ url);
-        console.log('删除.svn文件');
     }).catch(err=>{
         return console.log('创建本地发布版本失败：' + err)
     });
@@ -90,7 +87,11 @@ async function commitSvn() {
     console.log('添加文件中...');
     await exec_order(`svn add ${INFOS.version}/`);
     console.log('提交文件中...');
-    await exec_order(`svn commit -m "提交描述"`);
+    await exec_order(`svn commit -m "脚本测试"`);
+    // console.log('下载依赖中...');
+    // await exec_order(`yarn`);
+    // console.log('build打包中...');
+    // await exec_order(`yarn build`);
 }
 function exec_order(order) {
     return new Promise((resolve,reject)=>{
