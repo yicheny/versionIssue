@@ -36,7 +36,8 @@ function pullSvn() {
     return projectFor(url)();
 
     function projectFor() {
-        return async () =>  await exec_order(`svn export ${url}`,'拉取最新代码中...')
+        if(INFOS.revision === 'latest')return async () =>  await exec_order(`svn export ${url}`,'拉取最新代码中...');
+        return async ()=> await exec_order(`svn export -r ${INFOS.revision} ${url}`,'拉取指定版本代码中...')
     }
 }
 function mkVerison(){
