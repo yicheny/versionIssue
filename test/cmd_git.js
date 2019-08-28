@@ -1,13 +1,14 @@
-let readline = require('readline');
-let fs = require('fs');
+const readline = require('readline');
+const fs = require('fs');
 const {exec} = require('child_process');
+const archiver = require('archiver');
 
 //发布需要使用的信息
 const INFOS = {
     project:null,
     version:null
-    // project:'TA',
-    // version:'hello'
+    // project:'AB',
+    // version:'DFGH'
 };
 const rl = rlFor();
 
@@ -18,6 +19,7 @@ async function main() {
     await pullSvn();
     await mkVerison();
     await commitSvn();
+    await buildDir();
     process.exit();
 }
 
@@ -48,13 +50,15 @@ function pullSvn() {
 
     function projectFor(key) {
         const projectMap = {
-            TA:async ()=>{
-                const svnUrl = `https://github.com/yicheny/webStrategy.git`;
-                await exec_order(`git clone ${svnUrl}`)
-            }
+            AA:async ()=>await gitClone(`https://github.com/yicheny/webStrategy.git`),
+            AB:async ()=>await gitClone(`https://github.com/yicheny/tree_table.git`),
         };
 
-        return projectMap[key]
+        return projectMap[key];
+
+        async function gitClone(url) {
+            await exec_order(`git clone ${url}`,'拉取最新代码中')
+        }
     }
 }
 
@@ -80,7 +84,8 @@ function mkVerison(){
 
     function getProjectName(key) {
         const projectNameMap = {
-            'TA':'webStrategy'
+            'AA':'webStrategy',
+            'AB':'tree_table',
         };
         return projectNameMap[key]
     }
@@ -92,24 +97,62 @@ function checkInfo(flag) {
 }
 
 async function commitSvn() {
-    console.log('添加文件中...');
-    await exec_order(`git add ${INFOS.version}/`);
-    console.log('提交文件中...');
-    await exec_order(`git commit -m "提交描述8"`);
+    await exec_order(`git add ${INFOS.version}/`,'添加文件中...');
+    await exec_order(`git commit -m "脚本测试中3"`,'提交文件中...');
+}
+async function buildDir() {
+    process.chdir(`./${INFOS.version}`);
+    await exec_order(`yarn install`,'下载依赖中...');
+    await exec_order(`yarn build`,'build打包中...');
+    await zip();
+
+    async function zip() {
+        const output = fs.createWriteStream(`${__dirname}/${INFOS.version}/build.zip`);
+        const archive = archiver('zip',{zlib:{level:9}});
+        archive.pipe(output);
+        const url = `${__dirname}/${INFOS.version}/build/`;
+        archive.directory(url,'build');
+        console.log('build包压缩中...');
+        await archive.finalize()
+    }
 }
 
-function exec_order(order) {
+function exec_order(order,info='') {
+    let i = 1;
+    const timeId = setInterval(()=>{
+        console.log(info,i++);
+    },1000);
+
     return new Promise((resolve,reject)=>{
         exec(order, (err, stdout, stderr) => {
-            if(err) {
-                reject(err)
-            }
-            resolve(stdout,stderr)
+            if(err) return reject(err);
+            return resolve(stdout,stderr);
         });
     }).then((stdout,stderr)=>{
-        // console.log('stdout',stdout);
+        console.log('stdout',stdout);
         // console.log('stderr',stderr);
+        clearInterval(timeId)
     }).catch(err=>{
-        // console.log('err',err)
+        console.log('err',err);
+        clearInterval(timeId)
     });
 }
+
+/*class TimeInfo{
+    constructor(info,speed=1000){
+        this.timeIndex = 1;
+        this.timeId = null;
+        this.info = '';
+        this.speed = speed;
+    }
+
+    executor = ()=>{
+        this.timeId = setInterval(()=>{
+            console.log(this.info,this.timeIndex++)
+        },this.speed)
+    };
+
+    clear = ()=>{
+        clearInterval(this.timeId)
+    }
+}*/
