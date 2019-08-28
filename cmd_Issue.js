@@ -1,14 +1,10 @@
-let readline = require('readline');
+let INFOS = null;
+let PROJECT_URL = null;
+let LOG_INFO = '';
+
 let fs = require('fs');
 const {exec} = require('child_process');
 const archiver = require('archiver');
-
-//发布需要使用的信息
-const INFOS = {
-    project:null,
-    version:null
-};
-const rl = rlFor();
 
 main();
 
@@ -17,47 +13,32 @@ async function main() {
     await pullSvn();
     await mkVerison();
     await commitSvn();
+    process.chdir(`./${INFOS.version}`);
     await buildDir();
+    createLog();
     process.exit();
 }
-function question (query) {
-    return new Promise(resolve => rl.question(query, (answer) => resolve(answer)));
+function getInfos() {
+    return new Promise((resolve,reject)=>fs.readFile('Setting.json','utf8',(err,data)=>{
+        if(err) reject(err);
+        resolve(data)
+    })).then(data=>{
+        data = JSON.parse(data);
+        INFOS = data.setting;
+        PROJECT_URL = data.project_url;
+    }).catch(err=>{
+        console.error('err',err);
+    })
 }
-function rlFor(){
-    return readline.createInterface({
-        input:process.stdin,
-        output:process.stdout
-    });
-}
-async function getInfos(){
-    INFOS.project = await question('请输入本次发布的项目名称：');
-    console.log('项目名称：'+ INFOS.project);
-    INFOS.version = await question('请输入本次发布的版本号：');
-    console.log('版本号：'+ INFOS.version);
-    const checkFlag = await question('请问信息是否确认无误？(Y/N)');
-    return checkInfo(checkFlag);
-}
-//拉取pullSvn最新版本至本地
 function pullSvn() {
-    if (!projectFor(INFOS.project)) {
-        console.log('没有这个项目或项目名称有误，请重新输入信息...');
-        return getInfos();
-    }
-    return projectFor(INFOS.project)();
+    const url = PROJECT_URL[INFOS.project];
+    if (!url) return console.log(('没有这个项目或项目名称有误，请重新配置信息...'));
+    return projectFor(url)();
 
-    function projectFor(key) {
-        const projectMap = {
-            TA:async ()=> await svnExport(`https://192.168.1.121:8443/svn/buy_side_web/apps/bs_transfer_agent/ta_frontend`)
-        };
-
-        return projectMap[key];
-
-        async function svnExport(url) {
-            await exec_order(`svn export ${url}`,'拉取最新代码中...')
-        }
+    function projectFor() {
+        return async () =>  await exec_order(`svn export ${url}`,'拉取最新代码中...')
     }
 }
-//使用获取的版本号为拉取的文件夹重命名
 function mkVerison(){
     console.log('使用获取的版本号为拉取的文件夹重命名...');
     const {project,version} = INFOS;
@@ -75,19 +56,11 @@ function mkVerison(){
     });
 
     function getProjectName(key) {
-        const projectNameMap = {
-            'TA':'ta_frontend'
-        };
-        return projectNameMap[key]
+        console.log(PROJECT_URL[INFOS.project].split('/').pop());
+        return PROJECT_URL[INFOS.project].split('/').pop();
     }
 }
-function checkInfo(flag) {
-    if(flag.toUpperCase() === 'Y') return console.log('信息确认无误，拉取最新版本到本地...');
-    console.log('请重新输入信息');
-    return getInfos();
-}
 async function buildDir() {
-    process.chdir(`./${INFOS.version}`);
     await exec_order(`yarn install`,'下载依赖中...');
     await exec_order(`yarn build`,'build打包中...');
     await zip();
@@ -106,6 +79,30 @@ async function commitSvn() {
     await exec_order(`svn add ${INFOS.version}/`,'添加文件中...');
     await exec_order(`svn commit -m "脚本测试"`,'提交文件中...');
 }
+function createLog() {
+    fs.writeFileSync(getFileName(),LOG_INFO,'utf8');
+
+    function getFileName(){
+        return `${INFOS.project}${getDate()}_log.txt`;
+
+        function getDate() {
+            const date = new Date();
+            const year = format(date.getFullYear());
+            const month= format(date.getMonth());
+            const day = format(date.getDate());
+            const hour = format(date.getHours());
+            const min = format(date.getMinutes());
+            const sec = format(date.getSeconds());
+
+            return year + month + day + hour + min + sec;
+
+            function format(value) {
+                if(value<10) return '0'+value;
+                return value;
+            }
+        }
+    }
+}
 function exec_order(order,info) {
     let i = 1;
     const timeId = setInterval(()=>{
@@ -120,9 +117,12 @@ function exec_order(order,info) {
     }).then((stdout,stderr)=>{
         console.log('stdout',stdout);
         console.log('stderr',stderr);
+        LOG_INFO += `stdout:${stdout}\n`;
+        LOG_INFO += `stderr:${stderr}\n`;
         clearInterval(timeId);
     }).catch(err=>{
         console.log('err',err);
+        LOG_INFO += `err:${err}\n`;
         clearInterval(timeId);
     });
 }

@@ -1,11 +1,11 @@
 {
   "setting": {
-    "project":"AB",
-    "version":"1.1.1.1",
+    "project":"AA",
+    "version":"1.1.1.8",
     "revision":"latest"
   },
-  "product_svn": {
+  "project_url": {
     "AA": "https://github.com/yicheny/webStrategy.git",
-    "BB": "https://github.com/yicheny/tree_table.git"
+    "AB": "https://github.com/yicheny/tree_table.git"
   }
 }
