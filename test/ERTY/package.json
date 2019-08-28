@@ -1,0 +1,7 @@
+{
+  "dependencies": {
+    "execa": "^2.0.4",
+    "iconv-lite": "^0.5.0",
+    "rimraf": "^3.0.0"
+  }
+}
