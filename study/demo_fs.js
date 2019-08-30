@@ -34,6 +34,11 @@ const {exec} = require('child_process');
 // fs.writeFileSync('写入测试.text','abcd','utf8');
 // fs.writeFileSync('写入测试.text','中文内容测试','utf8');
 
+// console.log(fs.readdirSync(__dirname));
+const url = __dirname + '\\YLFTEST_V8.8.9.8';
+console.log(url);
+exec_order('echo Y|rd /S ' + url);
+
 function exec_order(order) {
     return new Promise(resolve => exec(order,(res)=>resolve(res)));
 }

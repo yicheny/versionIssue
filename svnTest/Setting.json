@@ -1,0 +1,15 @@
+{
+  "info": {
+    "project":"TA",
+    "version":"YLFTEST_V8.8.9.8",
+    "revision":"latest",
+    "isUpload": true,
+    "describe": "这里是提交时的描述内容"
+  },
+  "project_url": {
+    "TA": "https://192.168.1.121:8443/svn/buy_side_web/apps/bs_transfer_agent/ta_frontend"
+  },
+  "web_url": {
+    "TA": "\\\\192.168.1.42\\产品测试\\FAS\\TA"
+  }
+}
