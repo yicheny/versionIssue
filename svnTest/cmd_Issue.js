@@ -1,7 +1,7 @@
 let INFOS = null;
 let PROJECT_URL = null;
 let LOG_INFO = '';
-let PACK_INFO = '';
+// let PACK_INFO = '';
 let WEB_URL = null;
 let SVN_COMMON_URL = null;
 
@@ -39,6 +39,7 @@ function getInfos() {
         console.error('err', err);
     })
 }
+
 async function delVersion() {
     if (!isExist()) return;
     await exec_order(`svn delete ${INFOS.version}`, '删除旧有版本目录...');
@@ -49,6 +50,7 @@ async function delVersion() {
         return dirList.includes(INFOS.version);
     }
 }
+
 function pullSvn() {
     const url = PROJECT_URL[INFOS.project];
     if (!url) return console.log(('没有这个项目或项目名称有误，请重新配置信息...'));
@@ -59,6 +61,7 @@ function pullSvn() {
         return async () => await exec_order(`svn export -r ${INFOS.revision} ${url}`, '拉取指定版本代码中...')
     }
 }
+
 function mkVerison() {
     console.log('使用获取的版本号为拉取的文件夹重命名...');
     const {project, version} = INFOS;
@@ -80,12 +83,12 @@ function mkVerison() {
         return PROJECT_URL[INFOS.project].split('/').pop();
     }
 }
+
 async function commitSvn() {
-    // await exec_order(`svn add .`,'添加日志到版本中...');
-    // process.chdir(`../`);
     await exec_order(`svn add ${INFOS.version}/`, '添加文件中...');
     await exec_order(`svn commit -m ${INFOS.describe}`, '提交文件中...');
 }
+
 async function buildDir() {
     await exec_order(`yarn install`, '下载依赖中...');
     await exec_order(`yarn build`, 'build打包中...');
@@ -101,6 +104,7 @@ async function buildDir() {
         await archive.finalize()
     }
 }
+
 async function upload() {
     if (!INFOS.isUpload) return;
     if (INFOS.project === 'TA') return await sp_TA();
@@ -113,6 +117,7 @@ async function upload() {
         return await exec_order(`echo Y|copy readme.txt ${WEB_URL[INFOS.project]}\\${INFOS.version}\\DOC`, 'readme.txt发送到线上环境的DOC目录中...');
     }
 }
+
 function createLog() {
     fs.writeFileSync(getFileName(), LOG_INFO, 'utf8');
 
@@ -137,7 +142,8 @@ function createLog() {
         }
     }
 }
-function exec_order(order, info) {
+
+function exec_order(order, info, fn=()=>{}) {
     const timeId = printInfo(info);
 
     return exec_promise(order).then((stdout, stderr) => {
@@ -145,24 +151,27 @@ function exec_order(order, info) {
         LOG_INFO += `stdout:${stdout}\n`;
         console.log('stderr', stderr);
         LOG_INFO += `stderr:${stderr}\n`;
+        fn(stdout,stderr);
         clearInterval(timeId);
     }).catch(err => {
         console.log('err', err);
         LOG_INFO += `err:${err}\n`;
         clearInterval(timeId);
     });
-}
-function exec_promise(order) {
-    return new Promise((resolve, reject) => {
-        exec(order, (err, stdout, stderr) => {
-            if (err) return reject(err);
-            return resolve(stdout, stderr);
-        });
-    })
-}
-function printInfo(info) {
-    let i = 1;
-    return setInterval(() => {
-        console.log(info, i++);
-    }, 1000);
+
+    function exec_promise(order) {
+        return new Promise((resolve, reject) => {
+            exec(order, (err, stdout, stderr) => {
+                if (err) return reject(err);
+                return resolve(stdout, stderr);
+            });
+        })
+    }
+
+    function printInfo(info) {
+        let i = 1;
+        return setInterval(() => {
+            console.log(info, i++);
+        }, 1000);
+    }
 }
