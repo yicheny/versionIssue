@@ -63,19 +63,21 @@ function pullSvn() {
 
 function mkVerison() {
     console.log('使用获取的版本号为拉取的文件夹重命名...');
-    const {project, version} = INFOS;
-    return new Promise((resolve, reject) => {
-        fs.rename(getProjectName(project), version, (err) => {
-            if (err) {
-                reject(err)
-            }
-            resolve()
-        })
-    }).then(async () => {
+    return promiseFor().then(async () => {
         console.log('创建本地发布版本成功');
     }).catch(err => {
         return console.log('创建本地发布版本失败：' + err)
     });
+
+    function promiseFor() {
+        const {project, version} = INFOS;
+        return new Promise((resolve, reject) => {
+            fs.rename(getProjectName(project), version, (err) => {
+                if (err) return reject(err);
+                return resolve()
+            })
+        })
+    }
 
     function getProjectName(key) {
         console.log(PROJECT_URL[INFOS.project].split('/').pop());
