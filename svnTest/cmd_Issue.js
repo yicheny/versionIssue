@@ -2,6 +2,7 @@ let INFOS = null;
 let PROJECT_URL = null;
 let LOG_INFO = '';
 let WEB_URL = null;
+let SVN_COMMON_URL = null;
 
 let fs = require('fs');
 const {exec} = require('child_process');
@@ -11,13 +12,15 @@ main();
 
 async function main() {
     await getInfos();
+    await delVersion();
     await pullSvn();
     await mkVerison();
-    await commitSvn();
     process.chdir(`./${INFOS.version}`);
     await buildDir();
     await upload();
     createLog();
+    process.chdir(`../`);
+    await commitSvn();
     process.exit();
 }
 function getInfos() {
@@ -29,28 +32,29 @@ function getInfos() {
         INFOS = data.info;
         PROJECT_URL = data.project_url;
         WEB_URL = data.web_url;
+        SVN_COMMON_URL = data.svn_common_url
     }).catch(err=>{
         console.error('err',err);
     })
 }
+async function delVersion() {
+    if(!isExist()) return;
+    await exec_order(`svn delete ${INFOS.version}`,'删除旧有版本目录...');
+    await exec_order(`svn commit -m "删除旧有版本"`,'提交删除旧有版本目录...');
+
+    function isExist(){
+        const dirList = fs.readdirSync(__dirname);
+        return dirList.includes(INFOS.version);
+    }
+}
 function pullSvn() {
     const url = PROJECT_URL[INFOS.project];
-    isExist() && delVersion()();
     if (!url) return console.log(('没有这个项目或项目名称有误，请重新配置信息...'));
     return projectFor(url)();
 
     function projectFor() {
         if(INFOS.revision === 'latest')return async () =>  await exec_order(`svn export ${url}`,'拉取最新代码中...');
         return async ()=> await exec_order(`svn export -r ${INFOS.revision} ${url}`,'拉取指定版本代码中...')
-    }
-    function isExist(){
-        const dirList = fs.readdirSync(__dirname);
-        return dirList.includes(INFOS.version);
-    }
-    function delVersion() {
-        const url = (__dirname + `\\${INFOS.version}`);
-        console.log(`${INFOS.version}已存在，删除旧有目录...`);
-        return async ()=> await exec_order('echo Y|rd /S ' + url);
     }
 }
 function mkVerison(){
@@ -133,11 +137,9 @@ function exec_order(order,info) {
             if(err) return reject(err);
             return resolve(stdout,stderr);
         });
-    }).then((stdout,stderr)=>{
+    }).then((stdout)=>{
         console.log('stdout',stdout);
-        // console.log('stderr',stderr);
         LOG_INFO += `stdout:${stdout}\n`;
-        // LOG_INFO += `stderr:${stderr}\n`;
         clearInterval(timeId);
     }).catch(err=>{
         console.log('err',err);
