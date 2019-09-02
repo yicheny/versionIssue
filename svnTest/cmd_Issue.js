@@ -3,7 +3,6 @@ let PROJECT_URL = null;
 let LOG_INFO = '';
 // let PACK_INFO = '';
 let WEB_URL = null;
-let SVN_COMMON_URL = null;
 
 let fs = require('fs');
 const {exec} = require('child_process');
@@ -35,7 +34,6 @@ function getInfos() {
         INFOS = data.info;
         PROJECT_URL = data.project_url;
         WEB_URL = data.web_url;
-        SVN_COMMON_URL = data.svn_common_url
     }).catch(err => {
         console.error('err', err);
     })
@@ -144,8 +142,7 @@ function createLog() {
     }
 }
 
-function exec_order(order, info, fn = () => {
-}) {
+function exec_order(order, info, fn =()=>{}) {
     const timeId = printInfo(info);
 
     return exec_promise(order).then((stdout, stderr) => {

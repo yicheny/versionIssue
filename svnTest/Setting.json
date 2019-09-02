@@ -1,7 +1,7 @@
 {
   "info": {
     "project":"TA",
-    "version":"YLFTEST_V8.8.9.8",
+    "version":"FASTA_8.8.0.0",
     "revision":"latest",
     "isUpload": true,
     "describe": "这里是提交时的描述内容"
@@ -11,6 +11,5 @@
   },
   "web_url": {
     "TA": "\\\\192.168.1.42\\产品测试\\FAS\\TA"
-  },
-  "svn_common_url":"https://192.168.1.121:8443/svn/buy_side_web/apps/tags"
+  }
 }
