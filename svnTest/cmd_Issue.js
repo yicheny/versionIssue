@@ -99,6 +99,12 @@ async function buildDir() {
 }
 async function upload() {
     if(!INFOS.isUpload) return;
+    if(INFOS.project === 'TA'){ //对TA项目的目录做特殊处理
+        await exec_order(`echo A|xcopy build ${WEB_URL[INFOS.project]}\\${INFOS.version}\\Build\\web\\build /E`,'build发送到线上环境的Build目录中...');
+        await exec_order(`echo A|xcopy build ${WEB_URL[INFOS.project]}\\${INFOS.version}\\Patch\\web\\build /E`,'build发送到线上环境的Patch目录中...');
+        await exec_order(`echo Y|copy readme.txt ${WEB_URL[INFOS.project]}\\${INFOS.version}\\DOC`,'readme.txt发送到线上环境的DOC目录中...');
+        return
+    }
     await exec_order(`copy build.zip ${WEB_URL[INFOS.project]}\\web_temp`,'build.zip发送到线上环境中...');
     await exec_order(`copy readme.txt ${WEB_URL[INFOS.project]}\\web_temp`,'readme.txt发送到线上环境中...');
 }
@@ -137,9 +143,11 @@ function exec_order(order,info) {
             if(err) return reject(err);
             return resolve(stdout,stderr);
         });
-    }).then((stdout)=>{
+    }).then((stdout,stderr)=>{
         console.log('stdout',stdout);
         LOG_INFO += `stdout:${stdout}\n`;
+        console.log('stderr',stderr);
+        LOG_INFO += `stderr:${stderr}\n`;
         clearInterval(timeId);
     }).catch(err=>{
         console.log('err',err);
