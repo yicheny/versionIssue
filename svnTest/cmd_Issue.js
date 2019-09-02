@@ -63,8 +63,8 @@ function pullSvn() {
 
 function mkVerison() {
     console.log('使用获取的版本号为拉取的文件夹重命名...');
-    return promiseFor().then(async () => {
-        console.log('创建本地发布版本成功');
+    return promiseFor().then(() => {
+        return console.log('创建本地发布版本成功');
     }).catch(err => {
         return console.log('创建本地发布版本失败：' + err)
     });
@@ -109,8 +109,12 @@ async function buildDir() {
 async function upload() {
     if (!INFOS.isUpload) return;
     if (INFOS.project === 'TA') return await sp_TA();
-    await exec_order(`copy build.zip ${WEB_URL[INFOS.project]}\\web_temp`, 'build.zip发送到线上环境中...');
-    return await exec_order(`copy readme.txt ${WEB_URL[INFOS.project]}\\web_temp`, 'readme.txt发送到线上环境中...');
+    return await common_upload();
+
+    async function common_upload(){
+        await exec_order(`copy build.zip ${WEB_URL[INFOS.project]}\\web_temp`, 'build.zip发送到线上环境中...');
+        return await exec_order(`copy readme.txt ${WEB_URL[INFOS.project]}\\web_temp`, 'readme.txt发送到线上环境中...');
+    }
 
     async function sp_TA() {
         await exec_order(`echo A|xcopy build ${WEB_URL[INFOS.project]}\\${INFOS.version}\\Build\\web\\build /E`, 'build发送到线上环境的Build目录中...');
