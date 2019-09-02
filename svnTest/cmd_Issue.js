@@ -8,6 +8,7 @@ let SVN_COMMON_URL = null;
 let fs = require('fs');
 const {exec} = require('child_process');
 const archiver = require('archiver');
+const iconv = require('iconv-lite');
 
 main();
 
@@ -143,15 +144,16 @@ function createLog() {
     }
 }
 
-function exec_order(order, info, fn=()=>{}) {
+function exec_order(order, info, fn = () => {
+}) {
     const timeId = printInfo(info);
 
     return exec_promise(order).then((stdout, stderr) => {
-        console.log('stdout', stdout);
-        LOG_INFO += `stdout:${stdout}\n`;
-        console.log('stderr', stderr);
-        LOG_INFO += `stderr:${stderr}\n`;
-        fn(stdout,stderr);
+        console.log('stdout', iconvDecode(stdout));
+        LOG_INFO += `stdout:${iconvDecode(stdout)}\n`;
+        // console.log('stderr', stderr);
+        // LOG_INFO += `stderr:${stderr}\n`;
+        fn(stdout, stderr);
         clearInterval(timeId);
     }).catch(err => {
         console.log('err', err);
@@ -161,7 +163,7 @@ function exec_order(order, info, fn=()=>{}) {
 
     function exec_promise(order) {
         return new Promise((resolve, reject) => {
-            exec(order, (err, stdout, stderr) => {
+            exec(order, {encoding: 'binary'}, (err, stdout, stderr) => {
                 if (err) return reject(err);
                 return resolve(stdout, stderr);
             });
@@ -173,5 +175,11 @@ function exec_order(order, info, fn=()=>{}) {
         return setInterval(() => {
             console.log(info, i++);
         }, 1000);
+    }
+
+    function iconvDecode(str = '') {
+        const encoding          = 'cp936';
+        const binaryEncoding    = 'binary';
+        return iconv.decode(Buffer.from(str, binaryEncoding), encoding);
     }
 }
